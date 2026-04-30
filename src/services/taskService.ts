@@ -68,6 +68,12 @@ export async function addTask(payload: {
     throw new ValidationError('due_time must be a future date/time.');
   }
 
+  // Get the current authenticated user
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    throw new TaskServiceError('You must be logged in to add a task.');
+  }
+
   const { data, error } = await supabase
     .from('tasks')
     .insert({
@@ -76,6 +82,7 @@ export async function addTask(payload: {
       due_time: payload.due_time,
       status: 'pending',
       streak: 0,
+      user_id: user.id,
     })
     .select()
     .single();

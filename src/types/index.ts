@@ -6,6 +6,7 @@ export interface Task {
   created_at: string;
   due_time: string;
   streak: number;
+  user_id?: string;
 }
 
 export interface Badge {

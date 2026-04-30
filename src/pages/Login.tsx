@@ -24,8 +24,8 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; color: string } | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
 
     if (!email.trim() || !password.trim()) {
       setToast({ message: 'Please enter your email and password.', color: 'warning' });
@@ -48,7 +48,14 @@ const Login: React.FC = () => {
         setMode('login');
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Authentication failed.';
+      let msg = err instanceof Error ? err.message : 'Authentication failed.';
+      // Make Supabase's "Email not confirmed" error more user-friendly
+      if (msg.toLowerCase().includes('email not confirmed')) {
+        msg = 'Please check your email and click the confirmation link before logging in.';
+      }
+      if (msg.toLowerCase().includes('invalid login credentials')) {
+        msg = 'Incorrect email or password. Please try again.';
+      }
       setToast({ message: msg, color: 'danger' });
     } finally {
       setLoading(false);
@@ -116,9 +123,10 @@ const Login: React.FC = () => {
               {/* Submit */}
               <IonButton
                 expand="block"
-                type="submit"
+                type="button"
                 disabled={loading}
                 className="login-button"
+                onClick={handleSubmit as unknown as React.MouseEventHandler}
               >
                 {loading ? (
                   <IonSpinner name="crescent" />
