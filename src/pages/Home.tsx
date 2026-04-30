@@ -12,10 +12,12 @@ import {
   IonFab,
   IonFabButton,
   IonIcon,
+  IonButtons,
   useIonViewWillEnter,
 } from '@ionic/react';
-import { add } from 'ionicons/icons';
+import { add, logOutOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
+import { supabase } from '../lib/supabaseClient';
 import { Task } from '../types';
 import { fetchTasks, markDone } from '../services/taskService';
 import { cancelReminder } from '../services/notificationService';
@@ -29,6 +31,11 @@ const Home: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showError, setShowError] = useState(false);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    // App.tsx auth listener will redirect to /login automatically
+  };
 
   const loadTasks = async () => {
     setLoading(true);
@@ -84,6 +91,11 @@ const Home: React.FC = () => {
       <IonHeader>
         <IonToolbar>
           <IonTitle>My Tasks</IonTitle>
+          <IonButtons slot="end">
+            <IonButton onClick={handleLogout} fill="clear" title="Log out">
+              <IonIcon slot="icon-only" icon={logOutOutline} />
+            </IonButton>
+          </IonButtons>
         </IonToolbar>
       </IonHeader>
 

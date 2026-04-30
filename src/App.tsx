@@ -8,6 +8,7 @@ import {
   IonTabBar,
   IonTabButton,
   IonTabs,
+  IonSpinner,
   setupIonicReact,
 } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
@@ -37,10 +38,14 @@ import Home from './pages/Home';
 import AddTask from './pages/AddTask';
 import TaskDetail from './pages/TaskDetail';
 import Dashboard from './pages/Dashboard';
+import Login from './pages/Login';
+import { useAuth } from './hooks/useAuth';
 
 setupIonicReact();
 
 const App: React.FC = () => {
+  const { user, loading } = useAuth();
+
   useEffect(() => {
     const listenerPromise = LocalNotifications.addListener(
       'localNotificationActionPerformed',
@@ -57,37 +62,69 @@ const App: React.FC = () => {
     };
   }, []);
 
+  // Show a full-screen spinner while Supabase resolves the session
+  if (loading) {
+    return (
+      <IonApp>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100vh',
+          }}
+        >
+          <IonSpinner name="crescent" />
+        </div>
+      </IonApp>
+    );
+  }
+
   return (
     <IonApp>
       <IonReactRouter>
-        <IonTabs>
+        {!user ? (
+          // Unauthenticated: only show login, redirect everything else
           <IonRouterOutlet>
-            <Route exact path="/home" component={Home} />
-            <Route exact path="/add-task" component={AddTask} />
-            <Route exact path="/task/:id" component={TaskDetail} />
-            <Route exact path="/dashboard" component={Dashboard} />
-            <Route exact path="/">
-              <Redirect to="/home" />
+            <Route exact path="/login" component={Login} />
+            <Route>
+              <Redirect to="/login" />
             </Route>
           </IonRouterOutlet>
+        ) : (
+          // Authenticated: show full app with tabs
+          <IonTabs>
+            <IonRouterOutlet>
+              <Route exact path="/home" component={Home} />
+              <Route exact path="/add-task" component={AddTask} />
+              <Route exact path="/task/:id" component={TaskDetail} />
+              <Route exact path="/dashboard" component={Dashboard} />
+              <Route exact path="/login">
+                <Redirect to="/home" />
+              </Route>
+              <Route exact path="/">
+                <Redirect to="/home" />
+              </Route>
+            </IonRouterOutlet>
 
-          <IonTabBar slot="bottom">
-            <IonTabButton tab="home" href="/home">
-              <IonIcon icon={homeOutline} />
-              <IonLabel>Home</IonLabel>
-            </IonTabButton>
+            <IonTabBar slot="bottom">
+              <IonTabButton tab="home" href="/home">
+                <IonIcon icon={homeOutline} />
+                <IonLabel>Home</IonLabel>
+              </IonTabButton>
 
-            <IonTabButton tab="add-task" href="/add-task">
-              <IonIcon icon={addCircleOutline} />
-              <IonLabel>Add Task</IonLabel>
-            </IonTabButton>
+              <IonTabButton tab="add-task" href="/add-task">
+                <IonIcon icon={addCircleOutline} />
+                <IonLabel>Add Task</IonLabel>
+              </IonTabButton>
 
-            <IonTabButton tab="dashboard" href="/dashboard">
-              <IonIcon icon={barChartOutline} />
-              <IonLabel>Dashboard</IonLabel>
-            </IonTabButton>
-          </IonTabBar>
-        </IonTabs>
+              <IonTabButton tab="dashboard" href="/dashboard">
+                <IonIcon icon={barChartOutline} />
+                <IonLabel>Dashboard</IonLabel>
+              </IonTabButton>
+            </IonTabBar>
+          </IonTabs>
+        )}
       </IonReactRouter>
     </IonApp>
   );
